@@ -1,7 +1,9 @@
-require("@nomiclabs/hardhat-waffle");
+const fs = require("fs");
+const path = require("path");
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
+require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-etherscan");
+
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   const accounts = await hre.ethers.getSigners();
 
@@ -10,12 +12,37 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   }
 });
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
+function readJson(name) {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, name)).toString());
+  } catch (err) {
+    console.log(`WARNING: no ${name} found.`);
+    return {}
+  }
+};
+
+const secrets = readJson(".secrets.json");
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  solidity: "0.8.4",
+  networks: {
+    rinkeby: {
+      url: "https://rinkeby.infura.io/v3/" + secrets.infura_key,
+      accounts: secrets.accounts || [],
+    }
+  },
+  etherscan: {
+    apiKey: secrets.etherscan_key,
+  },
+  solidity: {
+    version: "0.8.6",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200
+      }
+    }
+  }
 };
