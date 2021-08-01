@@ -8,22 +8,20 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ERC721Sample is ERC721Enumerable, Ownable {
-    string private _baseUri;
+    mapping(uint256 => string) private _tokenUris;
 
     constructor() ERC721("NFT Sample", "NFTs") {
         console.log("Deploying an NTF samlpe");
     }
 
-    function mint(address _to, uint256 _id) public onlyOwner {
+    function mint(address _to, uint256 _id, string memory _uri) public onlyOwner {
+        console.log("Minting token '%d' with uri '%s'", _id, _uri);
         _mint(_to, _id);
+        _tokenUris[_id] = _uri;
     }
 
-    function tokenURI(uint256 _tokenId) override public view returns (string memory) {
-        return string(abi.encodePacked(_baseUri, Strings.toString(_tokenId)));
-    }
-
-    function setBaseURI(string memory _uri) public onlyOwner {
-        console.log("Changing base URI from '%s' to '%s'", _baseUri, _uri);
-        _baseUri = _uri;
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+        return string(abi.encodePacked("ipfs://", _tokenUris[tokenId]));
     }
 }
